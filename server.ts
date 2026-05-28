@@ -111,7 +111,7 @@ Informations brutes soumises:
 Veuillez structurer les informations de façon ultra professionnelle.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-2.0-flash",
       contents: prompt,
       config: {
         systemInstruction: "Tu es un consultant RH senior expert du marché du travail aux Canaries (Gran Canaria, Espagne). Tu aides les nouveaux arrivants (migrants, étudiants) à transformer leurs profils bruts en CV parfaits, traduits professionnellement, mentionnant de façon élégante les facilités d'intégration espagnoles.",

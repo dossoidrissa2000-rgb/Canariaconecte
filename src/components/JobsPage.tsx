@@ -3,6 +3,7 @@ import { MOCK_JOBS } from "../mockData";
 import { JobOffer, JobApplication } from "../types";
 import { Briefcase, Search, MapPin, Euro, Clock, BadgeAlert, Layers, Heart, Bookmark, CheckCircle2, Send, AlertTriangle, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { readStoredJson } from "../utils/storage";
 
 interface JobsPageProps {
   currentUser: { email: string; fullName: string } | null;
@@ -40,7 +41,7 @@ export default function JobsPage({
   }, [selectedCategory, searchQuery, selectedSpanLevel]);
 
   const categories = ["Tous", "Restauration", "Énergie Solaire", "Tourisme", "Nettoyage", "Administration"];
-  const spanishLevels = ["Tous", "Aucun", "Débutant (A1-A2)", "Intermédiaire (B1-B2)", "Avancé (C1-C1+)"];
+  const spanishLevels = ["Tous", "Aucun", "Débutant (A1-A2)", "Intermédiaire (B1-B2)", "Avancé (C1-C2+)"];
 
   const filteredJobs = MOCK_JOBS.filter((job) => {
     const matchesKeyword = 
@@ -83,9 +84,10 @@ export default function JobsPage({
       };
 
       // Save to LocalStorage applications
-      const apps = JSON.parse(localStorage.getItem("canaria_applications") || "[]");
-      apps.push(newApplication);
-      localStorage.setItem("canaria_applications", JSON.stringify(apps));
+      const apps = readStoredJson<JobApplication[]>("canaria_applications", []);
+      const list = Array.isArray(apps) ? apps : [];
+      list.push(newApplication);
+      localStorage.setItem("canaria_applications", JSON.stringify(list));
 
       setIsSubmitting(false);
       setApplyingJob(null);

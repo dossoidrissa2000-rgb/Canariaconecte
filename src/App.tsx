@@ -10,6 +10,7 @@ import UserDashboard from "./components/UserDashboard";
 
 import { Compass, Briefcase, GraduationCap, Landmark, FileText, CheckCircle2, ChevronRight, MessageSquare, Star, Sparkles, Building2, Eye, ShieldAlert, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { readStoredJson } from "./utils/storage";
 
 interface UserSession {
   email: string;
@@ -39,17 +40,22 @@ export default function App() {
     }
 
     // 2. Auth session check
-    const activeSession = localStorage.getItem("canaria_session");
-    if (activeSession) {
-      setCurrentUser(JSON.parse(activeSession));
+    const session = readStoredJson<UserSession | null>("canaria_session", null);
+    if (session?.email && session?.fullName) {
+      setCurrentUser(session);
     }
 
-    // 3. Bookmarked jobs list
-    const savedJobs = localStorage.getItem("canaria_saved_jobs");
-    if (savedJobs) {
-      setSavedJobIds(JSON.parse(savedJobs));
+    const savedJobs = readStoredJson<string[]>("canaria_saved_jobs", []);
+    if (Array.isArray(savedJobs)) {
+      setSavedJobIds(savedJobs);
     }
   }, []);
+
+  useEffect(() => {
+    if (currentPage === "dashboard" && !currentUser) {
+      setCurrentPage("login");
+    }
+  }, [currentPage, currentUser]);
 
   // Update dark mode class on root Html element
   useEffect(() => {
@@ -346,7 +352,7 @@ export default function App() {
                     <span className="text-[10px] font-bold text-orange-400 uppercase tracking-widest bg-orange-500/10 px-3 py-1.5 rounded-md">
                       C'est parti
                     </span>
-                    <h2 className="text-2xl md:text-3.5xl font-extrabold tracking-tight">Préparez votre dossier d'installation canarienne sans stress</h2>
+                    <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Préparez votre dossier d'installation canarienne sans stress</h2>
                     <p className="text-xs text-slate-300 max-w-xl leading-relaxed">
                       Utilisez notre module de checklist interactive lié en local. Cochez les documents requis en temps réel (EX-15, passeport certifié, Modelo 790 en banque) et sachez à tout moment si vous êtes prêt à 100% pour vos rendez-vous en commissariat.
                     </p>

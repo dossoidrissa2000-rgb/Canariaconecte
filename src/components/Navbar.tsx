@@ -68,7 +68,7 @@ export default function Navbar({
                   key={item.id}
                   id={`nav-desktop-${item.id}`}
                   onClick={() => handleNavClick(item.id)}
-                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer ${
+                  className={`relative flex items-center space-x-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer ${
                     isActive
                       ? "bg-sky-50 dark:bg-slate-800 text-sky-600 dark:text-sky-400 shadow-sm border border-sky-100/50 dark:border-slate-700/50"
                       : "text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-slate-50 dark:hover:bg-slate-800/50"

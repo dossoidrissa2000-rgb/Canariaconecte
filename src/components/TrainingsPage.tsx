@@ -3,6 +3,7 @@ import { MOCK_TRAININGS } from "../mockData";
 import { TrainingCourse } from "../types";
 import { GraduationCap, Hourglass, Globe, MapPin, Search, Calendar, ChevronRight, Check, Award, School } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { readStoredJson } from "../utils/storage";
 
 interface TrainingsPageProps {
   currentUser: { email: string; fullName: string } | null;
@@ -45,10 +46,11 @@ export default function TrainingsPage({
 
     setTimeout(() => {
       // Save course enrollment inside LocalStorage
-      const enrollments = JSON.parse(localStorage.getItem("canaria_enrollments") || "[]");
-      if (!enrollments.includes(courseTitle)) {
-        enrollments.push(courseTitle);
-        localStorage.setItem("canaria_enrollments", JSON.stringify(enrollments));
+      const enrollments = readStoredJson<string[]>("canaria_enrollments", []);
+      const list = Array.isArray(enrollments) ? enrollments : [];
+      if (!list.includes(courseTitle)) {
+        list.push(courseTitle);
+        localStorage.setItem("canaria_enrollments", JSON.stringify(list));
       }
 
       setEnrolling(false);

@@ -1,6 +1,15 @@
 import React, { useState } from "react";
-import { LogIn, UserPlus, Compass, HelpCircle, Mail, Key, ShieldCheck, HelpCircle as GoogleIcon } from "lucide-react";
-import { motion } from "motion/react";
+import { LogIn, UserPlus, Compass, Mail, Key, ShieldCheck } from "lucide-react";
+import { readStoredJson } from "../utils/storage";
+
+interface StoredUser {
+  email: string;
+  password: string;
+  fullName: string;
+  phone?: string;
+  status?: string;
+  bio?: string;
+}
 
 interface AuthPageProps {
   onLoginSuccess: (user: { email: string; fullName: string; status?: string; phone?: string; bio?: string }) => void;
@@ -30,10 +39,11 @@ export default function AuthPage({ onLoginSuccess, showToast }: AuthPageProps) {
 
     setTimeout(() => {
       if (activeTab === "login") {
-        // Retrieve local directory of users to authenticate
-        const users = JSON.parse(localStorage.getItem("canaria_users") || "[]");
-        const found = users.find((u: any) => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
-        
+        const users = readStoredJson<StoredUser[]>("canaria_users", []);
+        const found = Array.isArray(users)
+          ? users.find((u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password)
+          : undefined;
+
         if (found) {
           onLoginSuccess({
             email: found.email,
@@ -42,15 +52,11 @@ export default function AuthPage({ onLoginSuccess, showToast }: AuthPageProps) {
             phone: found.phone || ""
           });
           showToast(`Heureux de vous revoir, ${found.fullName} !`, "success");
+        } else if (email.toLowerCase() === "demo@canaria.com" && password === "demo123") {
+          const demoUser = { email: "demo@canaria.com", fullName: "Idrissa Dosso", status: "Étudiant", phone: "+34 600 123 456" };
+          onLoginSuccess(demoUser);
+          showToast("Connexion réussie avec le compte d'apprentissage.", "success");
         } else {
-          // Check for default demo logins
-          if (email.toLowerCase() === "demo@canaria.com" && password === "demo123") {
-            const demoUser = { email: "demo@canaria.com", fullName: "Idrissa Dosso", status: "Étudiant", phone: "+34 600 123 456" };
-            onLoginSuccess(demoUser);
-            showToast("Connexion réussie avec le compte d'apprentissage.", "success");
-            setIsSubmitting(false);
-            return;
-          }
           showToast("Identifiants incorrects ou compte inexistant.", "error");
         }
       } else {
@@ -61,8 +67,8 @@ export default function AuthPage({ onLoginSuccess, showToast }: AuthPageProps) {
           return;
         }
 
-        const users = JSON.parse(localStorage.getItem("canaria_users") || "[]");
-        const exists = users.some((u: any) => u.email.toLowerCase() === email.toLowerCase());
+        const users = readStoredJson<StoredUser[]>("canaria_users", []);
+        const exists = Array.isArray(users) && users.some((u) => u.email.toLowerCase() === email.toLowerCase());
 
         if (exists) {
           showToast("Cette adresse email est déjà enregistrée.", "error");
@@ -94,8 +100,8 @@ export default function AuthPage({ onLoginSuccess, showToast }: AuthPageProps) {
       };
       
       // Save user reference
-      const users = JSON.parse(localStorage.getItem("canaria_users") || "[]");
-      if (!users.some((u: any) => u.email === googleUser.email)) {
+      const users = readStoredJson<StoredUser[]>("canaria_users", []);
+      if (Array.isArray(users) && !users.some((u) => u.email === googleUser.email)) {
         users.push({ ...googleUser, password: "OAuthManagedGoogleSession" });
         localStorage.setItem("canaria_users", JSON.stringify(users));
       }

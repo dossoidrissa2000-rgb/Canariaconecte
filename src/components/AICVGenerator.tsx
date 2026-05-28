@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CVData } from "../types";
 import { FileDown, Sparkles, Send, Copy, RotateCcw, Award, Mail, Phone, MapPin, Printer, History, FileText, Check, LayoutTemplate, Palette } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { readStoredJson } from "../utils/storage";
 
 interface AICVGeneratorProps {
   currentUser: { email: string; fullName: string } | null;
@@ -30,6 +31,11 @@ export default function AICVGenerator({
   const [isLoading, setIsLoading] = useState(false);
   const [generatedCV, setGeneratedCV] = useState<CVData | null>(null);
   const [selectedPreset, setSelectedPreset] = useState<"modern" | "classic" | "tropical">("tropical");
+
+  useEffect(() => {
+    if (currentUser?.fullName) setFullName(currentUser.fullName);
+    if (currentUser?.email) setEmail(currentUser.email);
+  }, [currentUser]);
 
   // Handles submitting the raw text prompts to the server Gemini proxy
   const handleGenerateCV = async (e: React.FormEvent) => {
@@ -73,15 +79,16 @@ export default function AICVGenerator({
       }
 
       // Add to localStorage saved CVs history list
-      const cvsHistory = JSON.parse(localStorage.getItem("canaria_cv_history") || "[]");
-      cvsHistory.push({
+      const cvsHistory = readStoredJson<{ id: string; title: string; fullName: string; date: string; data: CVData }[]>("canaria_cv_history", []);
+      const list = Array.isArray(cvsHistory) ? cvsHistory : [];
+      list.push({
         id: `cv-${Date.now()}`,
         title: data.jobTitle,
         fullName: data.fullName,
         date: new Date().toLocaleDateString("fr-FR"),
         data
       });
-      localStorage.setItem("canaria_cv_history", JSON.stringify(cvsHistory));
+      localStorage.setItem("canaria_cv_history", JSON.stringify(list));
 
     } catch (err: any) {
       console.error(err);

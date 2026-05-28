@@ -24,7 +24,7 @@ export interface JobOffer {
   description: string;
   requirements: string[];
   benefits: string[];
-  spanishLevel: 'Aucun' | 'Débutant (A1-A2)' | 'Intermédiaire (B1-B2)' | 'Avancé (C1-C1+)';
+  spanishLevel: 'Aucun' | 'Débutant (A1-A2)' | 'Intermédiaire (B1-B2)' | 'Avancé (C1-C2+)';
   postedAt: string;
 }
 

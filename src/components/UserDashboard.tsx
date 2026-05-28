@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { UserProfile, JobApplication, CVData } from "../types";
-import { User, Briefcase, GraduationCap, FileCode, CheckCircle2, Bookmark, Clock, UserCheck, AlertCircle, Save } from "lucide-react";
+import { User, Briefcase, GraduationCap, FileCode, CheckCircle2, Bookmark, AlertCircle, Save } from "lucide-react";
+import { readStoredJson } from "../utils/storage";
 
 interface UserDashboardProps {
   currentUser: { email: string; fullName: string; status?: string; phone?: string; bio?: string } | null;
@@ -31,9 +32,9 @@ export default function UserDashboard({
 
   useEffect(() => {
     // Sync storage parameters
-    setApplications(JSON.parse(localStorage.getItem("canaria_applications") || "[]"));
-    setEnrollments(JSON.parse(localStorage.getItem("canaria_enrollments") || "[]"));
-    setCvHistory(JSON.parse(localStorage.getItem("canaria_cv_history") || "[]"));
+    setApplications(readStoredJson<JobApplication[]>("canaria_applications", []));
+    setEnrollments(readStoredJson<string[]>("canaria_enrollments", []));
+    setCvHistory(readStoredJson<{ id: string; title: string; fullName: string; date: string }[]>("canaria_cv_history", []));
   }, [activeTab]);
 
   const handleProfileSave = (e: React.FormEvent) => {
@@ -369,7 +370,7 @@ export default function UserDashboard({
 
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-sky-500 hover:bg-sky-655 text-white rounded-xl font-bold flex items-center space-x-1.5 cursor-pointer hover:scale-[1.01] transition-transform shadow-md"
+                  className="px-5 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-bold flex items-center space-x-1.5 cursor-pointer hover:scale-[1.01] transition-transform shadow-md"
                 >
                   <Save className="w-4 h-4" />
                   <span>Sauvegarder les modifications</span>

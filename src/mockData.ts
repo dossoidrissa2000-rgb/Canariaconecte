@@ -111,7 +111,7 @@ export const MOCK_JOBS: JobOffer[] = [
       "Une atmosphère de travail solidaire, engagée et multiculturelle",
       "Participation aux séminaires locaux de droit des étrangers"
     ],
-    spanishLevel: "Avancé (C1-C1+)",
+    spanishLevel: "Avancé (C1-C2+)",
     postedAt: "Il y a 1 semaine"
   },
   {

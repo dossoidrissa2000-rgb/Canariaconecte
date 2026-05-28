@@ -68,6 +68,7 @@ export default function Footer({ setCurrentPage }: FooterProps) {
                   <a
                     href={service.url}
                     target="_blank"
+                    rel="noopener noreferrer"
                     referrerPolicy="no-referrer"
                     className="flex items-center space-x-1 hover:text-amber-400 transition-colors"
                   >
