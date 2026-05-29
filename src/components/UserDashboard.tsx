@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { UserProfile, JobApplication, CVData } from "../types";
 import { User, Briefcase, GraduationCap, FileCode, CheckCircle2, Bookmark, AlertCircle, Save } from "lucide-react";
-import { readStoredJson } from "../utils/storage";
+import { readStoredArray, writeStoredJson, STORAGE_KEYS } from "../utils/storage";
 
 interface UserDashboardProps {
   currentUser: { email: string; fullName: string; status?: string; phone?: string; bio?: string } | null;
@@ -32,9 +32,9 @@ export default function UserDashboard({
 
   useEffect(() => {
     // Sync storage parameters
-    setApplications(readStoredJson<JobApplication[]>("canaria_applications", []));
-    setEnrollments(readStoredJson<string[]>("canaria_enrollments", []));
-    setCvHistory(readStoredJson<{ id: string; title: string; fullName: string; date: string }[]>("canaria_cv_history", []));
+    setApplications(readStoredArray<JobApplication>(STORAGE_KEYS.APPLICATIONS));
+    setEnrollments(readStoredArray<string>(STORAGE_KEYS.ENROLLMENTS));
+    setCvHistory(readStoredArray<{ id: string; title: string; fullName: string; date: string }>(STORAGE_KEYS.CV_HISTORY));
   }, [activeTab]);
 
   const handleProfileSave = (e: React.FormEvent) => {
@@ -50,21 +50,21 @@ export default function UserDashboard({
   const handleRemoveApplication = (id: string) => {
     const updated = applications.filter(a => a.id !== id);
     setApplications(updated);
-    localStorage.setItem("canaria_applications", JSON.stringify(updated));
+    writeStoredJson(STORAGE_KEYS.APPLICATIONS, updated);
     showToast("Candidature retirée de l'historique.", "info");
   };
 
   const handleRemoveEnrollment = (title: string) => {
     const updated = enrollments.filter(e => e !== title);
     setEnrollments(updated);
-    localStorage.setItem("canaria_enrollments", JSON.stringify(updated));
+    writeStoredJson(STORAGE_KEYS.ENROLLMENTS, updated);
     showToast("Désinscription de la formation enregistrée.", "info");
   };
 
   const deleteCVRecord = (id: string) => {
     const updated = cvHistory.filter(c => c.id !== id);
     setCvHistory(updated);
-    localStorage.setItem("canaria_cv_history", JSON.stringify(updated));
+    writeStoredJson(STORAGE_KEYS.CV_HISTORY, updated);
     showToast("CV archivé retiré de la base.", "info");
   };
 

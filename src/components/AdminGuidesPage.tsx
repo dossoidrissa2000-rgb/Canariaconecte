@@ -3,7 +3,7 @@ import { MOCK_ADMIN_GUIDES } from "../mockData";
 import { AdminGuides } from "../types";
 import { Landmark, Compass, Calendar, CheckSquare, Eye, Award, ExternalLink, ChevronDown, Check, FolderOpen, HeartHandshake } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { readStoredJson } from "../utils/storage";
+import { readStoredJson, writeStoredJson, STORAGE_KEYS } from "../utils/storage";
 
 interface AdminGuidesPageProps {
   showToast: (message: string, type: "success" | "error" | "info") => void;
@@ -15,7 +15,7 @@ export default function AdminGuidesPage({ showToast }: AdminGuidesPageProps) {
 
   useEffect(() => {
     // Load existing administrative checklist checks from localStorage
-    setCheckedDocs(readStoredJson<Record<string, boolean>>("canaria_admin_checklist", {}));
+    setCheckedDocs(readStoredJson<Record<string, boolean>>(STORAGE_KEYS.ADMIN_CHECKLIST, {}));
   }, []);
 
   const handleToggleDoc = (docName: string) => {
@@ -24,7 +24,7 @@ export default function AdminGuidesPage({ showToast }: AdminGuidesPageProps) {
       [docName]: !checkedDocs[docName]
     };
     setCheckedDocs(updated);
-    localStorage.setItem("canaria_admin_checklist", JSON.stringify(updated));
+    writeStoredJson(STORAGE_KEYS.ADMIN_CHECKLIST, updated);
     
     // Toast notification if checked
     if (updated[docName]) {

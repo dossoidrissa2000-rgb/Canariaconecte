@@ -6,6 +6,7 @@
   --color-slate-105: #f8fafc;
   --color-slate-250: #e8edf4;
   --color-slate-350: #b8c4d4;
+  --color-slate-405: #94a3b8;
   --color-slate-450: #8b9bb0;
   --color-slate-550: #64748b;
   --color-slate-650: #475569;
@@ -14,19 +15,33 @@
   --color-slate-750: #293548;
   --color-slate-850: #1a2234;
 
-  --font-size-3_5xl: 2rem;
-  --font-size-3_5xl--line-height: 2.25rem;
-
   --color-sky-350: #7dd3fc;
   --color-sky-550: #0ea5e9;
   --color-sky-650: #0284c7;
   --color-sky-850: #0c4a6e;
 
   --color-orange-550: #ea580c;
+  --color-orange-650: #c2410c;
   --color-emerald-550: #059669;
   --color-indigo-550: #4f46e5;
 }
 
 @utility animate-spin-slow {
   animation: spin 3s linear infinite;
+}
+
+/* Base responsive & accessibility */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Focus visible for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--color-sky-550);
+  outline-offset: 2px;
 }

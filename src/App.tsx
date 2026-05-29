@@ -10,15 +10,16 @@ import UserDashboard from "./components/UserDashboard";
 
 import { Compass, Briefcase, GraduationCap, Landmark, FileText, CheckCircle2, ChevronRight, MessageSquare, Star, Sparkles, Building2, Eye, ShieldAlert, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { readStoredJson } from "./utils/storage";
-
-interface UserSession {
-  email: string;
-  fullName: string;
-  status?: string;
-  phone?: string;
-  bio?: string;
-}
+import {
+  readStoredJson,
+  readSession,
+  persistSession,
+  removeStored,
+  writeStoredJson,
+  STORAGE_KEYS,
+  type UserSession,
+} from "./utils/storage";
+import SeoHead from "./components/SeoHead";
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<string>("home");
@@ -34,18 +35,17 @@ export default function App() {
   // Load visual settings, credentials, and bookmarks on startup mount
   useEffect(() => {
     // 1. Dark mode sync
-    const savedTheme = localStorage.getItem("canaria_theme");
+    const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME);
     if (savedTheme === "dark") {
       setDarkMode(true);
     }
 
-    // 2. Auth session check
-    const session = readStoredJson<UserSession | null>("canaria_session", null);
-    if (session?.email && session?.fullName) {
+    const session = readSession();
+    if (session) {
       setCurrentUser(session);
     }
 
-    const savedJobs = readStoredJson<string[]>("canaria_saved_jobs", []);
+    const savedJobs = readStoredJson<string[]>(STORAGE_KEYS.SAVED_JOBS, []);
     if (Array.isArray(savedJobs)) {
       setSavedJobIds(savedJobs);
     }
@@ -62,10 +62,10 @@ export default function App() {
     const root = window.document.documentElement;
     if (darkMode) {
       root.classList.add("dark");
-      localStorage.setItem("canaria_theme", "dark");
+      localStorage.setItem(STORAGE_KEYS.THEME, "dark");
     } else {
       root.classList.remove("dark");
-      localStorage.setItem("canaria_theme", "light");
+      localStorage.setItem(STORAGE_KEYS.THEME, "light");
     }
   }, [darkMode]);
 
@@ -78,13 +78,13 @@ export default function App() {
 
   const handleLoginSuccess = (user: UserSession) => {
     setCurrentUser(user);
-    localStorage.setItem("canaria_session", JSON.stringify(user));
+    persistSession(user);
     setCurrentPage("dashboard");
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
-    localStorage.removeItem("canaria_session");
+    removeStored(STORAGE_KEYS.SESSION);
     setCurrentPage("home");
     showToast("Vous avez été déconnecté avec succès.", "success");
   };
@@ -93,7 +93,7 @@ export default function App() {
     if (currentUser) {
       const merged = { ...currentUser, ...updated };
       setCurrentUser(merged);
-      localStorage.setItem("canaria_session", JSON.stringify(merged));
+      persistSession(merged);
     }
   };
 
@@ -107,7 +107,7 @@ export default function App() {
       showToast("Offre d'emploi sauvegardée dans vos favoris !", "success");
     }
     setSavedJobIds(updatedList);
-    localStorage.setItem("canaria_saved_jobs", JSON.stringify(updatedList));
+    writeStoredJson(STORAGE_KEYS.SAVED_JOBS, updatedList);
   };
 
   // Static Local Testimonials dataset
@@ -135,8 +135,43 @@ export default function App() {
     }
   ];
 
+  const pageSeo: Record<string, { title: string; description: string }> = {
+    home: {
+      title: "Accueil",
+      description:
+        "Portail d'intégration à Gran Canaria : emplois locaux, formations, guides NIE et générateur de CV avec IA.",
+    },
+    emplois: {
+      title: "Offres d'emploi",
+      description: "Trouvez un emploi à Las Palmas, Maspalomas, Telde et dans tout l'archipel.",
+    },
+    formations: {
+      title: "Formations",
+      description: "Cours d'espagnol et formations professionnelles gratuites aux Canaries.",
+    },
+    "cv-generator": {
+      title: "CV avec IA",
+      description: "Générez un CV optimisé pour le marché du travail canarien.",
+    },
+    "aide-admin": {
+      title: "Aide administrative",
+      description: "Guides NIE, empadronamiento et Seguridad Social pas à pas.",
+    },
+    login: {
+      title: "Connexion",
+      description: "Créez votre compte CanariaConnect pour postuler et suivre vos démarches.",
+    },
+    dashboard: {
+      title: "Mon tableau de bord",
+      description: "Suivez vos candidatures, formations et CV générés.",
+    },
+  };
+
+  const seo = pageSeo[currentPage] ?? pageSeo.home;
+
   return (
     <div className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-300">
+      <SeoHead title={seo.title} description={seo.description} />
       
       {/* Dynamic persistent Header Navbar */}
       <Navbar

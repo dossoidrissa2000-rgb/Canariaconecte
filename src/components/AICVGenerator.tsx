@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { CVData } from "../types";
 import { FileDown, Sparkles, Send, Copy, RotateCcw, Award, Mail, Phone, MapPin, Printer, History, FileText, Check, LayoutTemplate, Palette } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { readStoredJson } from "../utils/storage";
+import { readStoredArray, writeStoredJson, STORAGE_KEYS } from "../utils/storage";
+import { requestCvGeneration } from "../utils/cv-client";
 
 interface AICVGeneratorProps {
   currentUser: { email: string; fullName: string } | null;
@@ -48,51 +49,45 @@ export default function AICVGenerator({
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/cv/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fullName,
-          jobTitle,
-          email,
-          phone,
-          address,
-          summaryInput,
-          skillsInput,
-          languagesInput,
-          experienceInput,
-          educationInput
-        })
+      const data = await requestCvGeneration({
+        fullName,
+        jobTitle,
+        email,
+        phone,
+        address,
+        summaryInput,
+        skillsInput,
+        languagesInput,
+        experienceInput,
+        educationInput,
       });
 
-      if (!response.ok) {
-        throw new Error("HTTP connection error on Express CV proxy");
-      }
-
-      const data = (await response.json()) as CVData & { warnings?: string[] };
-      
       setGeneratedCV(data);
-      if (data.warnings && data.warnings.includes("API_KEY_MISSING_FALLBACK")) {
-        showToast("CV généré à partir du profil type CanariaConnect (Clé API de démonstration).", "info");
+      if (data.warnings?.includes("API_KEY_MISSING_FALLBACK")) {
+        showToast("CV généré en mode démo (ajoutez GEMINI_API_KEY pour l'IA complète).", "info");
       } else {
         showToast("Votre CV a été rédigé et traduit avec succès par l'IA !", "success");
       }
 
-      // Add to localStorage saved CVs history list
-      const cvsHistory = readStoredJson<{ id: string; title: string; fullName: string; date: string; data: CVData }[]>("canaria_cv_history", []);
-      const list = Array.isArray(cvsHistory) ? cvsHistory : [];
+      const list = readStoredArray<{
+        id: string;
+        title: string;
+        fullName: string;
+        date: string;
+        data: CVData;
+      }>(STORAGE_KEYS.CV_HISTORY);
       list.push({
         id: `cv-${Date.now()}`,
         title: data.jobTitle,
         fullName: data.fullName,
         date: new Date().toLocaleDateString("fr-FR"),
-        data
+        data,
       });
-      localStorage.setItem("canaria_cv_history", JSON.stringify(list));
-
-    } catch (err: any) {
+      writeStoredJson(STORAGE_KEYS.CV_HISTORY, list);
+    } catch (err: unknown) {
       console.error(err);
-      showToast("La génération a échoué. Veuillez vérifier la connexion au serveur.", "error");
+      const message = err instanceof Error ? err.message : "Erreur inconnue";
+      showToast(message || "La génération a échoué. Vérifiez que le serveur est démarré.", "error");
     } finally {
       setIsLoading(false);
     }

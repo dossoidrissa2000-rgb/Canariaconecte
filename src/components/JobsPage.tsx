@@ -1,9 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { MOCK_JOBS } from "../mockData";
 import { JobOffer, JobApplication } from "../types";
-import { Briefcase, Search, MapPin, Euro, Clock, BadgeAlert, Layers, Heart, Bookmark, CheckCircle2, Send, AlertTriangle, X } from "lucide-react";
+import { Briefcase, Search, MapPin, Euro, BadgeAlert, Bookmark, Send, AlertTriangle, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { readStoredJson } from "../utils/storage";
+import { readStoredArray, writeStoredJson, STORAGE_KEYS } from "../utils/storage";
+import {
+  filterJobs,
+  JOB_CATEGORIES,
+  SPANISH_LEVELS,
+  type JobCategoryFilter,
+  type SpanishLevelFilter,
+} from "../utils/job-filters";
 
 interface JobsPageProps {
   currentUser: { email: string; fullName: string } | null;
@@ -21,8 +28,8 @@ export default function JobsPage({
   toggleSaveJob
 }: JobsPageProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("Tous");
-  const [selectedSpanLevel, setSelectedSpanLevel] = useState<string>("Tous");
+  const [selectedCategory, setSelectedCategory] = useState<JobCategoryFilter>("Tous");
+  const [selectedSpanLevel, setSelectedSpanLevel] = useState<SpanishLevelFilter>("Tous");
   const [applyingJob, setApplyingJob] = useState<JobOffer | null>(null);
   
   // Application form fields
@@ -36,25 +43,25 @@ export default function JobsPage({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 550);
+    const timer = setTimeout(() => setIsLoading(false), 400);
     return () => clearTimeout(timer);
-  }, [selectedCategory, searchQuery, selectedSpanLevel]);
+  }, []);
 
-  const categories = ["Tous", "Restauration", "Énergie Solaire", "Tourisme", "Nettoyage", "Administration"];
-  const spanishLevels = ["Tous", "Aucun", "Débutant (A1-A2)", "Intermédiaire (B1-B2)", "Avancé (C1-C2+)"];
+  const filteredJobs = useMemo(
+    () =>
+      filterJobs(MOCK_JOBS, {
+        searchQuery,
+        category: selectedCategory,
+        spanishLevel: selectedSpanLevel,
+      }),
+    [searchQuery, selectedCategory, selectedSpanLevel]
+  );
 
-  const filteredJobs = MOCK_JOBS.filter((job) => {
-    const matchesKeyword = 
-      job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.description.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesCategory = selectedCategory === "Tous" || job.category === selectedCategory;
-    const matchesSpanLevel = selectedSpanLevel === "Tous" || job.spanishLevel === selectedSpanLevel;
-
-    return matchesKeyword && matchesCategory && matchesSpanLevel;
-  });
+  const activeFilterCount = [
+    searchQuery.trim(),
+    selectedCategory !== "Tous",
+    selectedSpanLevel !== "Tous",
+  ].filter(Boolean).length;
 
   const handleApplySubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,10 +91,9 @@ export default function JobsPage({
       };
 
       // Save to LocalStorage applications
-      const apps = readStoredJson<JobApplication[]>("canaria_applications", []);
-      const list = Array.isArray(apps) ? apps : [];
+      const list = readStoredArray<JobApplication>(STORAGE_KEYS.APPLICATIONS);
       list.push(newApplication);
-      localStorage.setItem("canaria_applications", JSON.stringify(list));
+      writeStoredJson(STORAGE_KEYS.APPLICATIONS, list);
 
       setIsSubmitting(false);
       setApplyingJob(null);
@@ -135,11 +141,11 @@ export default function JobsPage({
               <span className="absolute left-3.5 top-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Catégorie</span>
               <select
                 value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
+                onChange={(e) => setSelectedCategory(e.target.value as JobCategoryFilter)}
                 className="w-full pl-3 pr-4 pt-5 pb-1 rounded-xl bg-slate-50 dark:bg-slate-800/80 text-sm border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 dark:text-white cursor-pointer"
               >
-                {categories.map((cat, idx) => (
-                  <option key={idx} value={cat}>{cat}</option>
+                {JOB_CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
             </div>
@@ -149,16 +155,24 @@ export default function JobsPage({
               <span className="absolute left-3.5 top-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Espagnol Exigé</span>
               <select
                 value={selectedSpanLevel}
-                onChange={(e) => setSelectedSpanLevel(e.target.value)}
+                onChange={(e) => setSelectedSpanLevel(e.target.value as SpanishLevelFilter)}
                 className="w-full pl-3 pr-4 pt-5 pb-1 rounded-xl bg-slate-50 dark:bg-slate-800/80 text-sm border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 dark:text-white cursor-pointer"
               >
-                {spanishLevels.map((lvl, idx) => (
-                  <option key={idx} value={lvl}>{lvl}</option>
+                {SPANISH_LEVELS.map((lvl) => (
+                  <option key={lvl} value={lvl}>{lvl}</option>
                 ))}
               </select>
             </div>
 
           </div>
+
+          {activeFilterCount > 0 && (
+            <p className="text-xs text-sky-600 dark:text-sky-400 font-semibold">
+              {filteredJobs.length} offre{filteredJobs.length !== 1 ? "s" : ""} correspondante
+              {filteredJobs.length !== 1 ? "s" : ""}
+              {activeFilterCount > 1 ? ` · ${activeFilterCount} filtres actifs` : ""}
+            </p>
+          )}
         </div>
 
         {/* Core Offers Listing Render */}

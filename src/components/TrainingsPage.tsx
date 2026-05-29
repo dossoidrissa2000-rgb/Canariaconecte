@@ -3,7 +3,7 @@ import { MOCK_TRAININGS } from "../mockData";
 import { TrainingCourse } from "../types";
 import { GraduationCap, Hourglass, Globe, MapPin, Search, Calendar, ChevronRight, Check, Award, School } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { readStoredJson } from "../utils/storage";
+import { readStoredArray, writeStoredJson, STORAGE_KEYS } from "../utils/storage";
 
 interface TrainingsPageProps {
   currentUser: { email: string; fullName: string } | null;
@@ -46,11 +46,10 @@ export default function TrainingsPage({
 
     setTimeout(() => {
       // Save course enrollment inside LocalStorage
-      const enrollments = readStoredJson<string[]>("canaria_enrollments", []);
-      const list = Array.isArray(enrollments) ? enrollments : [];
+      const list = readStoredArray<string>(STORAGE_KEYS.ENROLLMENTS);
       if (!list.includes(courseTitle)) {
         list.push(courseTitle);
-        localStorage.setItem("canaria_enrollments", JSON.stringify(list));
+        writeStoredJson(STORAGE_KEYS.ENROLLMENTS, list);
       }
 
       setEnrolling(false);
@@ -232,7 +231,7 @@ export default function TrainingsPage({
                   {/* Dynamic description */}
                   <div className="space-y-2">
                     <h4 className="text-xs uppercase tracking-widest font-bold text-slate-400">Présentation du programme</h4>
-                    <p className="text-xs text-slate-600 dark:text-slate-350 leading-relaxed bg-slate-55 bg-indigo-50/10 p-3 rounded-lg border border-indigo-100/10">
+                    <p className="text-xs text-slate-600 dark:text-slate-350 leading-relaxed bg-slate-50 dark:bg-slate-850/50 bg-indigo-50/10 p-3 rounded-lg border border-indigo-100/10">
                       {selectedCourse.description}
                     </p>
                   </div>
@@ -285,7 +284,7 @@ export default function TrainingsPage({
                     <button
                       onClick={() => handleEnrollSubmit(selectedCourse.title)}
                       disabled={enrolling}
-                      className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-650 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 cursor-pointer transition-all hover:scale-[1.01]"
+                      className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 cursor-pointer transition-all hover:scale-[1.01]"
                     >
                       {enrolling ? (
                         <>
